@@ -41,6 +41,8 @@ main(void)
 	shell.running = 1;
 	line = NULL;
 	cap = 0;
+	if (isatty(STDIN_FILENO))
+		setup_signals();
 	while (shell.running) {
 		print_prompt();
 		if (getline(&line, &cap, stdin) == -1) {

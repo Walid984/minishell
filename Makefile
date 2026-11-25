@@ -3,7 +3,8 @@ NAME = minishell
 SRC = main.c \
       parse.c \
       exec.c \
-      builtins.c
+      builtins.c \
+      signals.c
 
 OBJ = $(SRC:.c=.o)
 

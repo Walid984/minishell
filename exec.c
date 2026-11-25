@@ -19,6 +19,7 @@ get_status(int wstatus)
 static void
 child_exec(char **args)
 {
+	reset_signals();
 	execvp(args[0], args);
 	if (errno == ENOENT) {
 		fprintf(stderr, "minishell: %s: command not found\n", args[0]);
@@ -33,15 +34,20 @@ exec_command(char **args)
 {
 	pid_t pid;
 	int wstatus;
+	int ret;
 
+	g_child_running = 1;
 	pid = fork();
 	if (pid == -1) {
+		g_child_running = 0;
 		perror("minishell: fork");
 		return (1);
 	}
 	if (pid == 0)
 		child_exec(args);
-	if (waitpid(pid, &wstatus, 0) == -1) {
+	ret = waitpid(pid, &wstatus, 0);
+	g_child_running = 0;
+	if (ret == -1) {
 		perror("minishell: waitpid");
 		return (1);
 	}
