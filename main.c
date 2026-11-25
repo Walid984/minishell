@@ -23,7 +23,9 @@ run_line(t_shell *shell, char *line)
 		shell->status = 1;
 		return;
 	}
-	if (args[0] != NULL)
+	if (args[0] != NULL && is_builtin(args[0]))
+		shell->status = run_builtin(shell, args);
+	else if (args[0] != NULL)
 		shell->status = exec_command(args);
 	free(args);
 }
