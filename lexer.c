@@ -3,7 +3,7 @@
 #include "minishell.h"
 
 #define SPACES " \t\n"
-#define OPERATORS "<>"
+#define OPERATORS "<>|"
 
 int
 is_operator(const char *token)

@@ -12,20 +12,25 @@ print_prompt(void)
 	}
 }
 
+/* Un builtin seul tourne dans le shell (cd doit changer son répertoire) */
 static void
-run_cmd(t_shell *shell, t_cmd *cmd)
+run_pipeline(t_shell *shell, t_pipeline *pl)
 {
-	if (cmd->args[0] != NULL && is_builtin(cmd->args[0]))
-		shell->status = run_builtin_redir(shell, cmd);
+	t_cmd *first;
+
+	first = &pl->cmds[0];
+	if (pl->count == 1 && first->args[0] != NULL &&
+	    is_builtin(first->args[0]))
+		shell->status = run_builtin_redir(shell, first);
 	else
-		shell->status = exec_command(cmd);
+		shell->status = exec_pipeline(shell, pl);
 }
 
 static void
 run_line(t_shell *shell, char *line)
 {
 	char **tokens;
-	t_cmd cmd;
+	t_pipeline pl;
 	int ret;
 
 	tokens = tokenize(line);
@@ -35,12 +40,12 @@ run_line(t_shell *shell, char *line)
 		return;
 	}
 	if (tokens[0] != NULL) {
-		ret = parse_cmd(tokens, &cmd);
+		ret = parse_line(tokens, &pl);
 		if (ret != 0) {
 			shell->status = ret;
 		} else {
-			run_cmd(shell, &cmd);
-			free_cmd(&cmd);
+			run_pipeline(shell, &pl);
+			free_pipeline(&pl);
 		}
 	}
 	free_strs(tokens);
