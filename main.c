@@ -13,21 +13,37 @@ print_prompt(void)
 }
 
 static void
+run_cmd(t_shell *shell, t_cmd *cmd)
+{
+	if (cmd->args[0] != NULL && is_builtin(cmd->args[0]))
+		shell->status = run_builtin_redir(shell, cmd);
+	else
+		shell->status = exec_command(cmd);
+}
+
+static void
 run_line(t_shell *shell, char *line)
 {
-	char **args;
+	char **tokens;
+	t_cmd cmd;
+	int ret;
 
-	args = split_line(line);
-	if (args == NULL) {
+	tokens = tokenize(line);
+	if (tokens == NULL) {
 		perror("minishell");
 		shell->status = 1;
 		return;
 	}
-	if (args[0] != NULL && is_builtin(args[0]))
-		shell->status = run_builtin(shell, args);
-	else if (args[0] != NULL)
-		shell->status = exec_command(args);
-	free(args);
+	if (tokens[0] != NULL) {
+		ret = parse_cmd(tokens, &cmd);
+		if (ret != 0) {
+			shell->status = ret;
+		} else {
+			run_cmd(shell, &cmd);
+			free_cmd(&cmd);
+		}
+	}
+	free_strs(tokens);
 }
 
 int

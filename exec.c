@@ -17,20 +17,25 @@ get_status(int wstatus)
 }
 
 static void
-child_exec(char **args)
+child_exec(t_cmd *cmd)
 {
 	reset_signals();
-	execvp(args[0], args);
+	if (apply_redirs(cmd->redirs) == -1)
+		_exit(1);
+	if (cmd->args[0] == NULL)
+		_exit(0);
+	execvp(cmd->args[0], cmd->args);
 	if (errno == ENOENT) {
-		fprintf(stderr, "minishell: %s: command not found\n", args[0]);
+		fprintf(stderr, "minishell: %s: command not found\n",
+		    cmd->args[0]);
 		_exit(127);
 	}
-	fprintf(stderr, "minishell: %s: %s\n", args[0], strerror(errno));
+	fprintf(stderr, "minishell: %s: %s\n", cmd->args[0], strerror(errno));
 	_exit(126);
 }
 
 int
-exec_command(char **args)
+exec_command(t_cmd *cmd)
 {
 	pid_t pid;
 	int wstatus;
@@ -44,7 +49,7 @@ exec_command(char **args)
 		return (1);
 	}
 	if (pid == 0)
-		child_exec(args);
+		child_exec(cmd);
 	ret = waitpid(pid, &wstatus, 0);
 	g_child_running = 0;
 	if (ret == -1) {

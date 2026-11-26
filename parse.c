@@ -1,37 +1,73 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "minishell.h"
 
-#define DELIMS " \t\n"
-
-char **
-split_line(char *line)
+static int
+is_redir(const char *token)
 {
-	char **args;
-	char **tmp;
-	char *token;
-	size_t size;
-	size_t i;
+	return (strcmp(token, "<") == 0 || strcmp(token, ">") == 0 ||
+	    strcmp(token, ">>") == 0);
+}
 
-	size = 8;
+static int
+syntax_error(t_cmd *cmd, const char *token)
+{
+	free_cmd(cmd);
+	if (token == NULL)
+		token = "newline";
+	fprintf(stderr, "minishell: syntax error near unexpected token `%s'\n",
+	    token);
+	return (2);
+}
+
+static int
+alloc_error(t_cmd *cmd)
+{
+	free_cmd(cmd);
+	perror("minishell");
+	return (1);
+}
+
+int
+parse_cmd(char **tokens, t_cmd *cmd)
+{
+	size_t i;
+	size_t nargs;
+	size_t nredirs;
+	int err;
+
+	cmd->args = calloc(1, sizeof(char *));
+	cmd->redirs = calloc(1, sizeof(char *));
+	if (cmd->args == NULL || cmd->redirs == NULL)
+		return (alloc_error(cmd));
 	i = 0;
-	args = malloc(size * sizeof(char *));
-	if (args == NULL)
-		return (NULL);
-	token = strtok(line, DELIMS);
-	while (token != NULL) {
-		if (i + 1 >= size) {
-			size *= 2;
-			tmp = realloc(args, size * sizeof(char *));
-			if (tmp == NULL) {
-				free(args);
-				return (NULL);
-			}
-			args = tmp;
+	nargs = 0;
+	nredirs = 0;
+	while (tokens[i] != NULL) {
+		if (!is_redir(tokens[i])) {
+			err = push_str(&cmd->args, &nargs, tokens[i++]);
+		} else if (tokens[i + 1] == NULL ||
+		    is_operator(tokens[i + 1])) {
+			return (syntax_error(cmd, tokens[i + 1]));
+		} else {
+			err = push_str(&cmd->redirs, &nredirs, tokens[i]);
+			if (err == 0)
+				err = push_str(&cmd->redirs, &nredirs,
+				    tokens[i + 1]);
+			i += 2;
 		}
-		args[i++] = token;
-		token = strtok(NULL, DELIMS);
+		if (err != 0)
+			return (alloc_error(cmd));
 	}
-	args[i] = NULL;
-	return (args);
+	return (0);
+}
+
+void
+free_cmd(t_cmd *cmd)
+{
+	free(cmd->args);
+	free(cmd->redirs);
+	cmd->args = NULL;
+	cmd->redirs = NULL;
 }

@@ -1,10 +1,13 @@
 NAME = minishell
 
 SRC = main.c \
+      lexer.c \
       parse.c \
+      redir.c \
       exec.c \
       builtins.c \
-      signals.c
+      signals.c \
+      utils.c
 
 OBJ = $(SRC:.c=.o)
 

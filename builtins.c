@@ -71,3 +71,32 @@ run_builtin(t_shell *shell, char **args)
 		return (builtin_cd(args));
 	return (builtin_exit(shell, args));
 }
+
+/* Builtin lancé dans le shell : on sauvegarde stdin/stdout autour */
+int
+run_builtin_redir(t_shell *shell, t_cmd *cmd)
+{
+	int saved_in;
+	int saved_out;
+	int status;
+
+	saved_in = dup(STDIN_FILENO);
+	saved_out = dup(STDOUT_FILENO);
+	if (saved_in == -1 || saved_out == -1) {
+		perror("minishell: dup");
+		if (saved_in != -1)
+			close(saved_in);
+		if (saved_out != -1)
+			close(saved_out);
+		return (1);
+	}
+	status = 1;
+	if (apply_redirs(cmd->redirs) == 0)
+		status = run_builtin(shell, cmd->args);
+	fflush(stdout);
+	dup2(saved_in, STDIN_FILENO);
+	dup2(saved_out, STDOUT_FILENO);
+	close(saved_in);
+	close(saved_out);
+	return (status);
+}
