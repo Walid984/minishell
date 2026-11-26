@@ -42,8 +42,8 @@ builtin_exit(t_shell *shell, char **args)
 	char *end;
 	long code;
 
-	if (isatty(STDIN_FILENO))
-		printf("exit\n");
+	if (shell->interactive)
+		fprintf(stderr, "exit\n");
 	if (args[1] == NULL) {
 		shell->running = 0;
 		return (shell->status);

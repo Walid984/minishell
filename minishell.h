@@ -9,6 +9,7 @@
 typedef struct s_shell {
 	int status;
 	int running;
+	int interactive;
 } t_shell;
 
 /* args : mots de la commande ; redirs : paires opérateur/fichier */

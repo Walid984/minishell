@@ -44,6 +44,7 @@ child_run(t_shell *shell, t_cmd *cmd, int in_fd, int *out)
 	if (cmd->args[0] == NULL)
 		_exit(0);
 	if (is_builtin(cmd->args[0])) {
+		shell->interactive = 0; /* pas de message exit dans un fils */
 		status = run_builtin(shell, cmd->args);
 		fflush(stdout);
 		_exit(status);

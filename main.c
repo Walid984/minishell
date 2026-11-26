@@ -60,15 +60,16 @@ main(void)
 
 	shell.status = 0;
 	shell.running = 1;
+	shell.interactive = isatty(STDIN_FILENO);
 	line = NULL;
 	cap = 0;
-	if (isatty(STDIN_FILENO))
+	if (shell.interactive)
 		setup_signals();
 	while (shell.running) {
 		print_prompt();
 		if (getline(&line, &cap, stdin) == -1) {
-			if (isatty(STDIN_FILENO))
-				printf("exit\n");
+			if (shell.interactive)
+				fprintf(stderr, "exit\n");
 			break;
 		}
 		run_line(&shell, line);
